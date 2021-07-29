@@ -52,3 +52,4 @@ To train and evaluate the model, run the ```run_classifier.py``` with input argu
 python -u run_classifier.py --data_dir ../data/ --bert_model=bert-base-uncased --task_name=stance --output_dir=./bert_dual_loss_15 --cache_dir=./BERT_CACHE/ --do_train --do_eval --do_lower_case --learning_rate=1e-5 --num_train_epochs=15 --train_batch_size=24
 ```
 
+# AdvancedMLFinalProject
