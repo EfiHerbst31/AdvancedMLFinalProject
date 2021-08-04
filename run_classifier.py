@@ -34,7 +34,7 @@ from tqdm import tqdm, trange
 from sklearn.metrics import classification_report
 
 from pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
-from modeling import BertForSequenceClassification, BertConfig, WEIGHTS_NAME, CONFIG_NAME, BertForSequenceClassificationDualLoss
+from modeling import BertForSequenceClassification, BertConfig, WEIGHTS_NAME, CONFIG_NAME, BertForSequenceClassificationDualLoss, BertForSequenceClassificationDualLossNewSimilarity
 from pytorch_pretrained_bert.tokenization import BertTokenizer
 from pytorch_pretrained_bert.optimization import BertAdam, warmup_linear
 
@@ -549,6 +549,10 @@ def main():
     
     # CHANGE HERE
     
+    # model = BertForSequenceClassificationDualLossNewSimilarity.from_pretrained(args.bert_model,
+    #           cache_dir=cache_dir,
+    #           num_labels = num_labels)
+
     model = BertForSequenceClassificationDualLoss.from_pretrained(args.bert_model,
               cache_dir=cache_dir,
               num_labels = num_labels)
@@ -671,10 +675,14 @@ def main():
         config = BertConfig(output_config_file)
 
         # CHANGE HERE        
+        
+        # model = BertForSequenceClassificationDualLossNewSimilarity(config, num_labels=num_labels)
         model = BertForSequenceClassificationDualLoss(config, num_labels=num_labels)
         #model = BertForSequenceClassification(config, num_labels=num_labels)        
         model.load_state_dict(torch.load(output_model_file))
     else:
+        
+        # model = BertForSequenceClassificationDualLossNewSimilarity.from_pretrained(args.bert_model, num_labels=num_labels)
         model = BertForSequenceClassificationDualLoss.from_pretrained(args.bert_model, num_labels=num_labels)
     model.to(device)
 
