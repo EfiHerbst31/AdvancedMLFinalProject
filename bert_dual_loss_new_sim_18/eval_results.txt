@@ -1,0 +1,35 @@
+alpha=0.5
+bert_model=bert-base-uncased
+cache_dir=./BERT_CACHE/
+data_dir=./data/
+do_eval=True
+do_lower_case=True
+do_train=True
+eval_batch_size=8
+fp16=False
+gradient_accumulation_steps=1
+learning_rate=1e-05
+local_rank=-1
+loss_scale=0
+max_seq_length=128
+no_cuda=False
+num_train_epochs=18.0
+output_dir=./bert_dual_loss_new_sim_18
+seed=42
+server_ip=
+server_port=
+task_name=stance
+train_batch_size=8
+warmup_proportion=0.1
+eval_accuracy = 0.7785791561485755
+eval_loss = 1.9309626875407673
+global_step = 15768
+loss = 0.028906640241594485
+              precision    recall  f1-score   support
+
+    supports     0.7847    0.8029    0.7937      1471
+     refutes     0.7713    0.7512    0.7611      1302
+
+   micro avg     0.7786    0.7786    0.7786      2773
+   macro avg     0.7780    0.7770    0.7774      2773
+weighted avg     0.7784    0.7786    0.7784      2773
