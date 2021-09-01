@@ -1,0 +1,54 @@
+Command line to be used for execution of all the below settings, with adjusted output_dir, num_train_epochs and learning_rate as needed : python -u run_classifier.py --data_dir ./data/ --bert_model=bert-base-uncased --task_name=stance --output_dir=./bert_dual_loss_15 --cache_dir=./BERT_CACHE/ --do_train --do_eval --do_lower_case --learning_rate=1e-5 --num_train_epochs=15 --train_batch_size=8
+
+In order to run BERT-BASE, make the following changes in run_classifier.py:
+Comment rows: 745, 746, 652
+Uncomment rows: 747, 748, 653
+Use the model in rows 572-574 and comment other models
+Use the model in row 701 and comment other models
+
+In order to run BERT-CONS, make the following changes in run_classifier.py:
+Use the model in rows 568-570 and comment other models
+Use the model in row 700 and comment other models
+
+In order to run our solution with setting #1 (cosine + new embeddings):
+Changes in run_classifier.py:
+Use the model in rows 554-556 and comment other models
+Use the model in row 695 and comment other models
+Use the model in row 705 and comment other models
+
+In order to run our solution with setting #2 (euclidean + original embeddings):
+Changes in run_classifier.py:
+Use the model in rows 562-564 and comment other models
+Use the model in row 697 and comment other models
+Use the model in row 707 and comment other models
+Changes in modeling.py
+Uncomment option #2 in row 1012
+Comment option #1 in row 1008
+
+In order to run our solution with setting #3 (euclidean + new embeddings):
+Changes in run_classifier.py:
+Use the model in rows 562-564 and comment other models
+Use the model in row 697 and comment other models
+Use the model in row 707 and comment other models
+Changes in modeling.py
+Uncomment option #1 in row 1008
+Comment option #2 in row 1012
+
+In order to run our solution with setting #4 (dot + original embeddings):
+Changes in run_classifier.py:
+Use the model in rows 558-560 and comment other models
+Use the model in row 696 and comment other models
+Use the model in row 706 and comment other models
+Changes in modeling.py
+Uncomment option #2 in row 957
+Comment option #1 in row 954
+
+In order to run our solution with setting #5 (dot + new embeddings):
+Changes in run_classifier.py:
+Use the model in rows 558-560 and comment other models
+Use the model in row 696 and comment other models
+Use the model in row 706 and comment other models
+Changes in modeling.py
+Uncomment option #1 in row 954
+Comment option #2 in row 957
+
