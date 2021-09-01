@@ -865,6 +865,7 @@ class BertForSequenceClassificationDualLoss(BertPreTrainedModel):
         else:
             return logits
 
+
 class BertForSequenceClassificationDualLossNewSimilarity(BertPreTrainedModel):
     '''
     In this class we implemented our suggestion for improvement for the ML final project
@@ -917,3 +918,111 @@ class BertForSequenceClassificationDualLossNewSimilarity(BertPreTrainedModel):
             return logits
 
 
+class BertForSequenceClassificationDualLossDotSimilarity(BertPreTrainedModel):
+    '''
+    In this class we implemented our suggestion for improvement for the ML final project
+    The following three inputs to BERT:
+    i - [CLS]-Claim Tokens-[SEP]-Perspective Tokens-[SEP]
+    ii - [CLS]-Claim Tokens-[SEP]
+    iii - [CLS]-Perspective Tokens-[SEP]
+    The similarity is computed via dot product between ii and iii outputs
+    The measured similarity will be concatenated with output from i and inserted to the dense layer as in the original architecture.
+
+    '''
+    def __init__(self, config, num_labels):
+        super(BertForSequenceClassificationDualLossDotSimilarity, self).__init__(config)
+        self.num_labels = num_labels
+        self.bert = BertModel(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.classifier = nn.Linear(config.hidden_size + 1, num_labels)
+        self.alpha = 0.5
+        self.apply(self.init_bert_weights)
+
+    def forward(self, input_ids, token_type_ids=None, attention_mask=None, labels=None, sim_labels=None):
+        
+        sen1_attention_mask = (1 - token_type_ids) * attention_mask
+        sen2_attention_mask = token_type_ids * attention_mask
+                
+        _, pooled_output_combined = self.bert(input_ids, token_type_ids, attention_mask, output_all_encoded_layers=False)
+        pooled_output_combined = self.dropout(pooled_output_combined)
+        
+        _, pooled_output_sen1 = self.bert(input_ids, token_type_ids, sen1_attention_mask, output_all_encoded_layers=False)
+
+        _, pooled_output_sen2 = self.bert(input_ids, token_type_ids, sen2_attention_mask, output_all_encoded_layers=False)
+
+        # Option 1: use the new suggested vectors, sent1 and sent2:
+        # dot_sim = torch.bmm(pooled_output_sen1.view(8, 1, 768), pooled_output_sen2.view(8, 768, 1)).reshape(8,1)
+        
+        # Option 2: use the original suggested vectors, pooled_output_combined and sent1:
+        dot_sim = torch.bmm(pooled_output_combined.view(8, 1, 768), pooled_output_sen1.view(8, 768, 1)).reshape(8,1)
+        
+        combined = torch.cat([pooled_output_combined, dot_sim], dim=1)
+        logits = self.classifier(combined)
+        
+        if labels is not None:
+            loss_fct = CrossEntropyLoss()
+            loss_bert = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+                        
+            loss_cosine = CosineEmbeddingLoss()
+            loss_intent = loss_cosine(pooled_output_combined, pooled_output_sen1, sim_labels.float())
+            
+            loss = loss_bert + loss_intent
+            
+            return loss
+        else:
+            return logits
+
+class BertForSequenceClassificationDualLossEuclideanSimilarity(BertPreTrainedModel):
+    '''
+    In this class we implemented our suggestion for improvement for the ML final project
+    The following three inputs to BERT:
+    i - [CLS]-Claim Tokens-[SEP]-Perspective Tokens-[SEP]
+    ii - [CLS]-Claim Tokens-[SEP]
+    iii - [CLS]-Perspective Tokens-[SEP]
+    The similarity is computed via Euclidean distance between ii and iii outputs
+    The measured similarity will be concatenated with output from i and inserted to the dense layer as in the original architecture.
+
+    '''
+    def __init__(self, config, num_labels):
+        super(BertForSequenceClassificationDualLossEuclideanSimilarity, self).__init__(config)
+        self.num_labels = num_labels
+        self.bert = BertModel(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.classifier = nn.Linear(config.hidden_size + 1, num_labels)
+        self.alpha = 0.5
+        self.apply(self.init_bert_weights)
+
+    def forward(self, input_ids, token_type_ids=None, attention_mask=None, labels=None, sim_labels=None):
+        
+        sen1_attention_mask = (1 - token_type_ids) * attention_mask
+        sen2_attention_mask = token_type_ids * attention_mask
+                
+        _, pooled_output_combined = self.bert(input_ids, token_type_ids, attention_mask, output_all_encoded_layers=False)
+        pooled_output_combined = self.dropout(pooled_output_combined)
+        
+        _, pooled_output_sen1 = self.bert(input_ids, token_type_ids, sen1_attention_mask, output_all_encoded_layers=False)
+
+        _, pooled_output_sen2 = self.bert(input_ids, token_type_ids, sen2_attention_mask, output_all_encoded_layers=False)
+
+        # Option 1: use the new suggested vectors, sent1 and sent2:
+        # euclidena_dist = ((pooled_output_sen1 - pooled_output_sen2)**2).sum(dim=1).unsqueeze(1)
+
+        
+        # Option 2: use the original suggested vectors, pooled_output_combined and sent1:
+        euclidena_dist = ((pooled_output_combined - pooled_output_sen1)**2).sum(dim=1).unsqueeze(1)
+
+        combined = torch.cat([pooled_output_combined, euclidena_dist], dim=1)
+        logits = self.classifier(combined)
+        
+        if labels is not None:
+            loss_fct = CrossEntropyLoss()
+            loss_bert = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+                        
+            loss_cosine = CosineEmbeddingLoss()
+            loss_intent = loss_cosine(pooled_output_combined, pooled_output_sen1, sim_labels.float())
+            
+            loss = loss_bert + loss_intent
+            
+            return loss
+        else:
+            return logits

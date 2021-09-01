@@ -34,7 +34,7 @@ from tqdm import tqdm, trange
 from sklearn.metrics import classification_report
 
 from pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
-from modeling import BertForSequenceClassification, BertConfig, WEIGHTS_NAME, CONFIG_NAME, BertForSequenceClassificationDualLoss, BertForSequenceClassificationDualLossNewSimilarity
+from modeling import BertForSequenceClassification, BertConfig, WEIGHTS_NAME, CONFIG_NAME, BertForSequenceClassificationDualLoss, BertForSequenceClassificationDualLossNewSimilarity, BertForSequenceClassificationDualLossEuclideanSimilarity, BertForSequenceClassificationDualLossDotSimilarity
 from pytorch_pretrained_bert.tokenization import BertTokenizer
 from pytorch_pretrained_bert.optimization import BertAdam, warmup_linear
 
@@ -549,17 +549,32 @@ def main():
     
     # CHANGE HERE
     
+    # Our innovation:
+
     # model = BertForSequenceClassificationDualLossNewSimilarity.from_pretrained(args.bert_model,
     #           cache_dir=cache_dir,
     #           num_labels = num_labels)
 
+    # model = BertForSequenceClassificationDualLossDotSimilarity.from_pretrained(args.bert_model,
+    #           cache_dir=cache_dir,
+    #           num_labels = num_labels)
+
+    # model = BertForSequenceClassificationDualLossEuclideanSimilarity.from_pretrained(args.bert_model,
+    #           cache_dir=cache_dir,
+    #           num_labels = num_labels)
+
+    # Paper's models:
+
     model = BertForSequenceClassificationDualLoss.from_pretrained(args.bert_model,
               cache_dir=cache_dir,
               num_labels = num_labels)
-    #model = BertForSequenceClassification.from_pretrained(args.bert_model,
-              #cache_dir=cache_dir,
-              #num_labels = num_labels)
-    
+
+    # model = BertForSequenceClassification.from_pretrained(args.bert_model,
+    #           cache_dir=cache_dir,
+    #           num_labels = num_labels)
+
+
+
     if args.fp16:
         model.half()
     model.to(device)
@@ -622,7 +637,7 @@ def main():
             train_sampler = RandomSampler(train_data)
         else:
             train_sampler = DistributedSampler(train_data)
-        train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=args.train_batch_size)
+        train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=args.train_batch_size, drop_last=True)
 
         model.train()
         for _ in trange(int(args.num_train_epochs), desc="Epoch"):
@@ -635,7 +650,7 @@ def main():
                 
                 # CHANGE HERE
                 loss = model(input_ids, segment_ids, input_mask, label_ids, sim_label_ids)
-                #loss = model(input_ids, segment_ids, input_mask, label_ids)
+                # loss = model(input_ids, segment_ids, input_mask, label_ids)
                 if n_gpu > 1:
                     loss = loss.mean() # mean() to average on multi-gpu.
                 if args.gradient_accumulation_steps > 1:
@@ -676,13 +691,21 @@ def main():
 
         # CHANGE HERE        
         
+        # Our innovation:
         # model = BertForSequenceClassificationDualLossNewSimilarity(config, num_labels=num_labels)
+        # model = BertForSequenceClassificationDualLossDotSimilarity(config, num_labels=num_labels)
+        # model = BertForSequenceClassificationDualLossEuclideanSimilarity(config, num_labels=num_labels)
+        
+        # Paper's models:
         model = BertForSequenceClassificationDualLoss(config, num_labels=num_labels)
-        #model = BertForSequenceClassification(config, num_labels=num_labels)        
+        # model = BertForSequenceClassification(config, num_labels=num_labels)        
         model.load_state_dict(torch.load(output_model_file))
     else:
         
         # model = BertForSequenceClassificationDualLossNewSimilarity.from_pretrained(args.bert_model, num_labels=num_labels)
+        # model = BertForSequenceClassificationDualLossDotSimilarity.from_pretrained(args.bert_model, num_labels=num_labels)
+        # model = BertForSequenceClassificationDualLossEuclideanSimilarity.from_pretrained(args.bert_model, num_labels=num_labels)
+        
         model = BertForSequenceClassificationDualLoss.from_pretrained(args.bert_model, num_labels=num_labels)
     model.to(device)
 
@@ -721,8 +744,8 @@ def main():
                 # CHANGE HERE
                 tmp_eval_loss = model(input_ids, segment_ids, input_mask, label_ids, sim_label_ids)
                 logits = model(input_ids, segment_ids, input_mask)
-                #tmp_eval_loss = model(input_ids, segment_ids, input_mask, label_ids)
-                #logits = model(input_ids, segment_ids, input_mask)
+                # tmp_eval_loss = model(input_ids, segment_ids, input_mask, label_ids)
+                # logits = model(input_ids, segment_ids, input_mask)
 
                 predicted_prob.extend(torch.nn.functional.softmax(logits, dim=1))
 
